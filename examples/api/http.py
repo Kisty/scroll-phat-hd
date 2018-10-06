@@ -88,7 +88,7 @@ def scroll():
     return jsonify(response), status_code
 
 
-@scrollphathd_blueprint.route('/show', methods=["POST"])
+@scrollphathd_blueprint.route('/stop', methods=["POST"])
 def show():
     response = {"result": "success"}
     status_code = http_status.OK
@@ -97,7 +97,7 @@ def show():
     if data is None:
         data = request.form
     try:
-        api_queue.put(Action("write", data["text"]))
+        api_queue.put(Action("stop", {}))
     except KeyError:
         response = {"result": "KeyError", "error": "key 'text' not set"}
         status_code = http_status.UNPROCESSABLE_ENTITY
@@ -133,6 +133,7 @@ def run():
     finish_countdown = False
 
     while True:
+        # Check if there's any HTTP actions
         if (api_queue.qsize() > 0):
             action = api_queue.get(block=True)
             print(action.action_type)
@@ -151,6 +152,10 @@ def run():
 
             if action.action_type == "clear":
                 cleanup()
+                countdown_running = False
+                finish_countdown = False
+
+            if action.action_type == "stop":
                 countdown_running = False
                 finish_countdown = False
 
@@ -179,19 +184,11 @@ def run():
                 if int(time.time()) % 2 == 0:
                     scrollphathd.clear_rect(8, 0, 1, 5)
             
-                # Display our time and sleep a bit. Using 1 second in time.sleep
-                # is not recommended, since you might get quite far out of phase
-                # with the passing of real wall-time seconds and it'll look weird!
-                #
-                # 1/10th of a second is accurate enough for a simple clock though :D
-                scrollphathd.show()
-                time.sleep(0.1)
             else:
                 print("Finished countdown")
                 countdown_running = False
                 finish_countdown = True
                 scrollphathd.clear()
-                scrollphathd.show()
                 scrollphathd.write_string(
                     "Time's up! ",
                     x=0, # Align to the left of the buffer
@@ -202,9 +199,12 @@ def run():
            
         if finish_countdown:
             scrollphathd.scroll()
-            scrollphathd.show()
-            time.sleep(0.1)
 
+        # Display our time and sleep a bit. Using 1 second in time.sleep
+        # is not recommended, since you might get quite far out of phase
+        # with the passing of real wall-time seconds and it'll look weird!
+        #
+        # 1/10th of a second is accurate enough for a simple clock though :D
         scrollphathd.show()
         time.sleep(0.1)
 
