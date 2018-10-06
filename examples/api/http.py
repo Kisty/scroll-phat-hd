@@ -135,6 +135,7 @@ def run():
     while True:
         if (api_queue.qsize() > 0):
             action = api_queue.get(block=True)
+            print(action.action_type)
 
             if action.action_type == "start":
                 cleanup()
@@ -186,6 +187,7 @@ def run():
                 scrollphathd.show()
                 time.sleep(0.1)
             else:
+                print("Finished countdown")
                 countdown_running = False
                 finish_countdown = True
                 scrollphathd.clear()
@@ -198,10 +200,10 @@ def run():
                     brightness=BRIGHTNESS # Use our global brightness value
                 )
            
-            if finish_countdown:
-                scrollphathd.scroll()
-                scrollphathd.show()
-                time.sleep(0.1)
+        if finish_countdown:
+            scrollphathd.scroll()
+            scrollphathd.show()
+            time.sleep(0.1)
 
         scrollphathd.show()
         time.sleep(0.1)
